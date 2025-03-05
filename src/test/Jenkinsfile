@@ -1,46 +1,50 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'myapp:latest'  // Define Docker image name
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Pull the code from GitHub
+                // Pull the code from the GitHub repository
                 git url: 'https://github.com/arul-stack/pipeline.git', branch: 'main'
             }
         }
 
         stage('Build') {
             steps {
-                // Build the Java project using Maven
+                // Use Maven to clean and package the project
                 sh 'mvn clean package'
             }
         }
 
         stage('Test') {
             steps {
-                // Run unit tests using Maven and JUnit
+                // Run the tests using Maven and JUnit
                 sh 'mvn test'
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                // Build a Docker image for the application
-                sh 'docker build -t myapp:latest .'
+                // Build a Docker image from the Dockerfile
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
-        stage('Deploy') {
+        stage('Run Docker Container') {
             steps {
-                // Push the Docker image to a Docker registry
-                sh 'docker push myapp:latest'
+                // Run the Docker container from the image
+                sh 'docker run -d -p 8080:8080 $DOCKER_IMAGE'
             }
         }
     }
 
     post {
         always {
-            // Clean the workspace after the build
+            // Clean up the workspace after the build is finished
             cleanWs()
         }
         success {
